@@ -1,7 +1,8 @@
 /*
  * $Id$
  *
- * Copyright 2012 by Valentin Kolesnikov
+ * Copyright 2012 Valentyn Kolesnikov
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.github.resourceviewer;
 
 import java.awt.event.WindowEvent;
@@ -28,12 +28,17 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+/**
+ * ResourceViewer.
+ *
+ * @author javadev
+ * @version $Revision$ $Date$
+ */
 public class ResourceViewer extends javax.swing.JFrame {
-    
+
     private File file;
     /** Creates new form Antenna */
     public ResourceViewer() {
@@ -229,26 +234,25 @@ public class ResourceViewer extends javax.swing.JFrame {
             jTextArea4.setText(convertUnicodeEscape(jTextArea5.getText()));
     }//GEN-LAST:event_onKeyReleased2
 
-    private static final char[] hexChar = {
-        '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'
+    private static final char[] HEX_CHARS = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
     };
 
     private static String unicodeEscape(String s) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < s.length(); i++) {
-        char c = s.charAt(i);
-        if ((c >> 7) > 0) {
-        sb.append("\\u");
-        sb.append(hexChar[(c >> 12) & 0xF]);
-        sb.append(hexChar[(c >> 8) & 0xF]);
-        sb.append(hexChar[(c >> 4) & 0xF]);
-        sb.append(hexChar[c & 0xF]);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if ((c >> 7) > 0) {
+                sb.append("\\u");
+                sb.append(HEX_CHARS[(c >> 12) & 0xF]);
+                sb.append(HEX_CHARS[(c >> 8) & 0xF]);
+                sb.append(HEX_CHARS[(c >> 4) & 0xF]);
+                sb.append(HEX_CHARS[c & 0xF]);
+            } else {
+                sb.append(c);
+            }
         }
-        else {
-        sb.append(c);
-        }
-    }
-    return sb.toString();
+        return sb.toString();
     }
 
         static enum ParseState {
@@ -259,58 +263,58 @@ public class ResourceViewer extends javax.swing.JFrame {
 
     // convert unicode escapes back to char
     private static String convertUnicodeEscape(String s) {
-    char[] out = new char[s.length()];
-
-    ParseState state = ParseState.NORMAL;
-    int j = 0, k = 0, unicode = 0;
-    char c = ' ';
-    for (int i = 0; i < s.length(); i++) {
-        c = s.charAt(i);
-        if (state == ParseState.ESCAPE) {
-        if (c == 'u') {
-            state = ParseState.UNICODE_ESCAPE;
-            unicode = 0;
-        }
-        else { // we don't care about other escapes
-            out[j++] = '\\';
+        char[] out = new char[s.length()];
+    
+        ParseState state = ParseState.NORMAL;
+        int j = 0, k = 0, unicode = 0;
+        char c = ' ';
+        for (int i = 0; i < s.length(); i++) {
+            c = s.charAt(i);
+            if (state == ParseState.ESCAPE) {
+            if (c == 'u') {
+                state = ParseState.UNICODE_ESCAPE;
+                unicode = 0;
+            }
+            else { // we don't care about other escapes
+                out[j++] = '\\';
+                out[j++] = c;
+                state = ParseState.NORMAL;
+            }
+            }
+            else if (state == ParseState.UNICODE_ESCAPE) {
+            if ((c >= '0') && (c <= '9')) {
+                unicode = (unicode << 4) + c - '0';
+            }
+            else if ((c >= 'a') && (c <= 'f')) {
+                unicode = (unicode << 4) + 10 + c - 'a';
+            }
+            else if ((c >= 'A') && (c <= 'F')) {
+                unicode = (unicode << 4) + 10 + c - 'A';
+            }
+            else {
+                throw new IllegalArgumentException("Malformed unicode escape");
+            }
+            k++;
+    
+            if (k == 4) {
+                out[j++] = (char) unicode;
+                k = 0;
+                state = ParseState.NORMAL;
+            }
+            }
+            else if (c == '\\') {
+            state = ParseState.ESCAPE;
+            }
+            else {
             out[j++] = c;
-            state = ParseState.NORMAL;
+            }
         }
+    
+        if (state == ParseState.ESCAPE) {
+            out[j++] = c;
         }
-        else if (state == ParseState.UNICODE_ESCAPE) {
-        if ((c >= '0') && (c <= '9')) {
-            unicode = (unicode << 4) + c - '0';
-        }
-        else if ((c >= 'a') && (c <= 'f')) {
-            unicode = (unicode << 4) + 10 + c - 'a';
-        }
-        else if ((c >= 'A') && (c <= 'F')) {
-            unicode = (unicode << 4) + 10 + c - 'A';
-        }
-        else {
-            throw new IllegalArgumentException("Malformed unicode escape");
-        }
-        k++;
-
-        if (k == 4) {
-            out[j++] = (char) unicode;
-            k = 0;
-            state = ParseState.NORMAL;
-        }
-        }
-        else if (c == '\\') {
-        state = ParseState.ESCAPE;
-        }
-        else {
-        out[j++] = c;
-        }
-    }
-
-    if (state == ParseState.ESCAPE) {
-        out[j++] = c;
-    }
-
-    return new String(out, 0, j);
+    
+        return new String(out, 0, j);
     }
 
     private static void setLookAndFeel()
@@ -318,10 +322,7 @@ public class ResourceViewer extends javax.swing.JFrame {
     {
         javax.swing.UIManager.LookAndFeelInfo infos[] = UIManager.getInstalledLookAndFeels();
         String firstFoundClass = null;
-        javax.swing.UIManager.LookAndFeelInfo arr$[] = infos;
-        int len$ = arr$.length;
-        for (int i$ = 0; i$ < len$; i$++) {
-            javax.swing.UIManager.LookAndFeelInfo info = arr$[i$];
+        for (javax.swing.UIManager.LookAndFeelInfo info : infos) {
             String foundClass = info.getClassName();
             if ("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel".equals(foundClass)) {
                 firstFoundClass = foundClass;
