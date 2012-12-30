@@ -324,7 +324,7 @@ public class ResourceViewer extends javax.swing.JFrame {
         String firstFoundClass = null;
         for (javax.swing.UIManager.LookAndFeelInfo info : infos) {
             String foundClass = info.getClassName();
-            if ("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel".equals(foundClass)) {
+            if ("Nimbus".equals(info.getName())) {
                 firstFoundClass = foundClass;
                 break;
             }
